@@ -5,7 +5,7 @@ resource "aws_vpc" "mainVPC" {
 
 }
 
-//Security group
+//Security group for EC2's
 resource "aws_security_group" "SG1" {
   name        = "SG1"
   vpc_id      = aws_vpc.mainVPC.id
@@ -34,6 +34,34 @@ resource "aws_security_group" "SG1" {
     protocol = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+//Security group for LoadBalancer
+resource "aws_security_group" "LBSG" {
+  name_prefix = " LoadBalancer Security Group "
+  vpc_id = aws_vpc.mainVPC.id
+
+ingress {
+    description = "HTTP from VPC"
+    from_port = 80
+    to_port =  80
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+}
+ingress {
+    description = "SSH"
+    from_port = 22
+    to_port =  22
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+}
+egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+}
+
 }
 
 //Subnets 
@@ -75,3 +103,34 @@ resource "aws_route_table_association" "RTA2" {
   subnet_id = aws_subnet.subnet2.id
   route_table_id = aws_route_table.RT.id
 } 
+
+//S3 bucket to store EC2 scripts
+resource "aws_s3_bucket" "EC2Storage" {
+  bucket = "bertlshoferStorageEC2"
+}
+
+//ACL to give S3 bucket public access
+resource "aws_s3_bucket_acl" "S3Acl" {
+  depends_on = [
+    aws_s3_bucket_ownership_controls.EC2Storage,
+    aws_s3_bucket_public_access_block.EC2Storage
+   ]
+
+  bucket = aws_s3_bucket.EC2Storage.id
+  acl = "public-read"
+}
+
+//EC2 Instances
+resource "aws_instance" "EC21" {
+    ami = ami-00beae93a2d981137
+    instance_type = "t2.micro"
+    vpc_security_group_ids = [ aws_security_group.SG1.id ]
+    subnet_id = aws_subnet.subnet1.id
+}
+
+resource "aws_instance" "EC22" {
+    ami = ami-00beae93a2d981137
+    instance_type = "t2.micro"
+    vpc_security_group_ids = [ aws_security_group.SG1.id ]
+    subnet_id = aws_subnet.subnet2.id
+}
