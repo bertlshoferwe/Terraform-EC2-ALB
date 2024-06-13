@@ -77,7 +77,7 @@ resource "aws_security_group" "SG1" {
 
 //EC2 Ubuntu Instances
 resource "aws_instance" "EC21" {
-    ami = "ami-04b70fa74e45c3917"
+    ami = var.Ubuntu-ami
     instance_type = "t2.micro"
     vpc_security_group_ids = [aws_security_group.SG1.id]
     subnet_id = aws_subnet.subnet1.id
@@ -85,7 +85,7 @@ resource "aws_instance" "EC21" {
 }
 
 resource "aws_instance" "EC22" {
-    ami = "ami-04b70fa74e45c3917"
+    ami = var.Ubuntu-ami
     instance_type = "t2.micro"
     vpc_security_group_ids = [aws_security_group.SG1.id]
     subnet_id = aws_subnet.subnet2.id
